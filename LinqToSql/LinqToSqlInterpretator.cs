@@ -8,11 +8,14 @@ namespace EternityFramework.LinqToSql
     {
         private ISqlQueryBuilder sqlQueryBuilder;
         
-        public string Visit(ISqlQueryBuilder sqlQueryBuilder, Expression node)
+        public InterpretationResult Visit(ISqlQueryBuilder sqlQueryBuilder, Expression node)
         {
             this.sqlQueryBuilder = sqlQueryBuilder;
             Visit(node);
-            return this.sqlQueryBuilder.GetSqlQuery();
+            return new InterpretationResult
+            {
+                SqlQuery = this.sqlQueryBuilder.GetSqlQuery()
+            };
         }
         
         public override Expression Visit(Expression node)
@@ -42,7 +45,9 @@ namespace EternityFramework.LinqToSql
             string arg = null;
             if(node.Arguments.Count == 2)
             {
-                arg = new LinqToSqlInterpretator().Visit(sqlQueryBuilder.Clone(), node.Arguments[1]);
+                arg = new LinqToSqlInterpretator()
+                    .Visit(sqlQueryBuilder.Clone(), node.Arguments[1])
+                    .SqlQuery;
             }
             
             if (node.Method.Name.Equals("Where", StringComparison.OrdinalIgnoreCase))
@@ -98,6 +103,9 @@ namespace EternityFramework.LinqToSql
             switch (node.NodeType) {
                 case ExpressionType.Equal:
                     sign = "=";
+                    break;
+                case ExpressionType.NotEqual:
+                    sign = "!=";
                     break;
                 case ExpressionType.GreaterThan:
                     sign = ">";

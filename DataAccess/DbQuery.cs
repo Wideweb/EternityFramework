@@ -1,5 +1,9 @@
-﻿using System;
+﻿using EternityFramework.Utils;
+using System;
+using System.Collections;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace EternityFramework.DataAccess
@@ -18,8 +22,44 @@ namespace EternityFramework.DataAccess
 
         public SqlTransaction BeginTransaction()
         {
-            currentTransaction = connection.BeginTransaction();
+            currentTransaction = connection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead);
             return currentTransaction;
+        }
+
+        public object Get(string sqlQuery, Type type)
+        {
+            if (type.GetTypeInfo().IsValueType || type == typeof(String))
+            {
+                return ExecuteQuery(sqlQuery);
+            }
+
+            if (TypeSystem.IsList(type))
+            {
+                var elementType = TypeSystem.GetElementType(type);
+                return ExecuteReader(sqlQuery, sdr =>
+                {
+                    var data = TypeSystem.CreateList(elementType);
+                    while (sdr.Read())
+                    {
+                        data.Add(Load(sdr, elementType));
+                    }
+                    return data;
+                });
+            }
+
+            return ExecuteReader(sqlQuery, sdr =>
+            {
+                if (sdr.Read())
+                {
+                    return Load(sdr, type);
+                }
+                return null;
+            });
+        }
+
+        public T Get<T>(string sqlQuery)
+        {
+            return (T)Get(sqlQuery, typeof(T));
         }
 
         public Task ExecuteCommandAsync(string queryString, params SqlParameter[] parameters)
@@ -46,7 +86,7 @@ namespace EternityFramework.DataAccess
             return ExecuteAsync(queryString, async command =>
             {
                 command.Parameters.AddRange(parameters);
-                return (long) await command.ExecuteScalarAsync();
+                return (long)await command.ExecuteScalarAsync();
             });
         }
 
@@ -55,7 +95,7 @@ namespace EternityFramework.DataAccess
             return ExecuteAsync(queryString, async command =>
             {
                 command.Parameters.AddRange(parameters);
-                return (T) await command.ExecuteScalarAsync();
+                return (T)await command.ExecuteScalarAsync();
             });
         }
 
@@ -65,6 +105,24 @@ namespace EternityFramework.DataAccess
             {
                 command.Parameters.AddRange(parameters);
                 return (T)command.ExecuteScalar();
+            });
+        }
+
+        public Task<object> ExecuteQueryAsync(string queryString, params SqlParameter[] parameters)
+        {
+            return ExecuteAsync(queryString, async command =>
+            {
+                command.Parameters.AddRange(parameters);
+                return await command.ExecuteScalarAsync();
+            });
+        }
+
+        public object ExecuteQuery(string queryString, params SqlParameter[] parameters)
+        {
+            return Execute(queryString, command =>
+            {
+                command.Parameters.AddRange(parameters);
+                return command.ExecuteScalar();
             });
         }
 
@@ -107,7 +165,7 @@ namespace EternityFramework.DataAccess
                     transaction.Commit();
                     return result;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     transaction.Rollback();
                     throw e;
@@ -182,6 +240,33 @@ namespace EternityFramework.DataAccess
             return exists;
         }
 
+        public T Load<T>(SqlDataReader sqlDataReader)
+        {
+            return (T)Load(sqlDataReader, typeof(T));
+        }
+
+        public object Load(SqlDataReader sqlDataReader, Type type)
+        {
+            try
+            {
+                var instance = Activator.CreateInstance(type);
+                var properties = type
+                    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(it => it.CanWrite);
+
+                foreach (var property in properties)
+                {
+                    var value = sqlDataReader[property.Name];
+                    property.SetValue(instance, value == DBNull.Value ? null : value);
+                }
+                return instance;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -197,7 +282,7 @@ namespace EternityFramework.DataAccess
             {
                 // Free any other managed objects here.
                 //
-                if(currentTransaction != null)
+                if (currentTransaction != null)
                 {
                     currentTransaction.Dispose();
                 }

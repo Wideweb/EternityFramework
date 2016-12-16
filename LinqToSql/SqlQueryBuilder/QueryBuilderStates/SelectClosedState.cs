@@ -97,5 +97,11 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder.QueryBuilderStates
             context.SqlQuery = $"SELECT * FROM ({context.SqlQuery}) AS {context.CurrentTableAlias} ORDER BY {context.OrderedByProperty} OFFSET 0 ROWS FETCH NEXT {count} ROWS ONLY ";
             context.GenerateNextTableAlias();
         }
+
+        public void AddCount(Type tableType)
+        {
+            context.TableType = tableType;
+            context.SqlQuery = $"SELECT COUNT(*) FROM ({context.SqlQuery})";
+        }
     }
 }

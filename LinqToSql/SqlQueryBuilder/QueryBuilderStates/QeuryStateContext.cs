@@ -13,14 +13,14 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder.QueryBuilderStates
         public string SqlQuery { get; set; }
         public string OrderedByProperty
         {
-            get { return $"{CurrentTableAlias}.{orderedByProperty}"; }
+            get { return orderedByProperty == null ? "1" : $"{CurrentTableAlias}.{orderedByProperty}"; }
             set { orderedByProperty = tableAliasProvider.GetTableMemberName(value); }
         }
 
         public QeuryStateContext()
         {
             tableAliasProvider = new TableAliasProvider();
-            orderedByProperty = "Id";
+            orderedByProperty = null;//"Id";
         }
 
         public string GenerateNextTableAlias()

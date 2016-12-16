@@ -9,7 +9,7 @@
 	                [Id] [bigint] IDENTITY(1,1) NOT NULL,
 	                [MigrationName] [nvarchar](max) NULL,
 	                [MigrationOrder] [bigint] NOT NULL,
-                 CONSTRAINT [PK_MigrationHistory] PRIMARY KEY CLUSTERED ([Id] ASC)"
+                 CONSTRAINT [PK_MigrationHistory] PRIMARY KEY CLUSTERED ([Id] ASC))"
             );
         }
 

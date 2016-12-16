@@ -54,7 +54,7 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder.QueryBuilderStates
         public void AddOrderBy(Type tableType, string property)
         {
             context.TableType = tableType;
-            context.SqlQuery = $"SELECT TOP 100 PERCENT * FROM {tableType.Name} AS {context.CurrentTableAlias} ORDER BY {property}";
+            context.SqlQuery = $"SELECT TOP 100 PERCENT * FROM [{tableType.Name}] AS {context.CurrentTableAlias} ORDER BY {property}";
             context.GenerateNextTableAlias();
             context.OrderedByProperty = property;
             sqlQueryBuilder.SetState(new SelectClosedState(sqlQueryBuilder, context));
@@ -64,7 +64,7 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder.QueryBuilderStates
         {
             var propertiesToSelect = string.IsNullOrEmpty(properties) ? "*" : properties;
             context.TableType = tableType;
-            context.SqlQuery += $" SELECT {propertiesToSelect} FROM {tableType.Name} AS {context.CurrentTableAlias}";
+            context.SqlQuery += $" SELECT {propertiesToSelect} FROM [{tableType.Name}] AS {context.CurrentTableAlias}";
             context.GenerateNextTableAlias();
             sqlQueryBuilder.SetState(new SelectClosedState(sqlQueryBuilder, context));
         }
@@ -72,7 +72,7 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder.QueryBuilderStates
         public void AddWhere(Type tableType, string condition)
         {
             context.TableType = tableType;
-            context.SqlQuery = $"SELECT * FROM {tableType.Name} AS {context.CurrentTableAlias} WHERE {condition}";
+            context.SqlQuery = $"SELECT * FROM [{tableType.Name}] AS {context.CurrentTableAlias} WHERE {condition}";
             context.GenerateNextTableAlias();
             sqlQueryBuilder.SetState(new SelectClosedState(sqlQueryBuilder, context));
         }
@@ -90,7 +90,7 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder.QueryBuilderStates
         public void AddSkip(Type tableType, string count)
         {
             context.TableType = tableType;
-            context.SqlQuery = $"SELECT * FROM {tableType.Name} AS {context.CurrentTableAlias} ORDER BY {context.OrderedByProperty} OFFSET {count} ROWS";
+            context.SqlQuery = $"SELECT * FROM [{tableType.Name}] AS {context.CurrentTableAlias} ORDER BY {context.OrderedByProperty} OFFSET {count} ROWS";
             context.GenerateNextTableAlias();
             sqlQueryBuilder.SetState(new SelectClosedState(sqlQueryBuilder, context));
         }
@@ -98,9 +98,15 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder.QueryBuilderStates
         public void AddTake(Type tableType, string count)
         {
             context.TableType = tableType;
-            context.SqlQuery = $"SELECT * FROM {tableType.Name} AS {context.CurrentTableAlias} ORDER BY {context.OrderedByProperty} OFFSET 0 ROWS FETCH NEXT {count} ROWS ONLY ";
+            context.SqlQuery = $"SELECT * FROM [{tableType.Name}] AS {context.CurrentTableAlias} ORDER BY {context.OrderedByProperty} OFFSET 0 ROWS FETCH NEXT {count} ROWS ONLY ";
             context.GenerateNextTableAlias();
             sqlQueryBuilder.SetState(new SelectClosedState(sqlQueryBuilder, context));
+        }
+
+        public void AddCount(Type tableType)
+        {
+            context.TableType = tableType;
+            context.SqlQuery = $"SELECT COUNT(*) FROM [{tableType.Name}]";
         }
     }
 }

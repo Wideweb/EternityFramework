@@ -16,6 +16,7 @@ namespace EternityFramework.LinqToSql
         void AddCurrentProperty();
         void AddAlias(string alias);
         void AddComma();
+        void AddCount(Type tableType);
     }
 
     public interface ISqlQueryBuilderState : IQueryBuilder

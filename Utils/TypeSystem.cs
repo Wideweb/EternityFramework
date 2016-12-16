@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace EternityFramework.Utils
 {
-    internal static class TypeSystem
+    public static class TypeSystem
     {
-        internal static Type GetElementType(Type seqType)
+        public static Type GetElementType(Type seqType)
         {
             Type ienum = FindIEnumerable(seqType);
             if (ienum == null) return seqType;
@@ -65,6 +66,16 @@ namespace EternityFramework.Utils
             }
 
             return to.IsAssignableFrom(from);
+        }
+
+        public static IList CreateList(Type elementType)
+        {
+            return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+        }
+
+        public static bool IsList(Type elementType)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(elementType);
         }
     }
 }

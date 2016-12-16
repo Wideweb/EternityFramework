@@ -1,9 +1,11 @@
 ﻿using EternityFramework.DataAccess;
+using EternityFramework.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace EternityFramework.LinqToSql
 {
@@ -73,5 +75,31 @@ namespace EternityFramework.LinqToSql
             return (Provider.Execute<System.Collections.IEnumerable>(Expression)).GetEnumerator();
         }
         #endregion
+
+        public async Task Update(TData entity)
+        {
+            var entityType = entity.GetType();
+
+            await dbQuery.ExecuteCommandAsync(
+                $@"UPDATE [dbo].[{DbEntityHelper.GetDbTableName(entityType)}] SET
+                    {DbEntityHelper.GetUpdatePropertiesString(entity)}
+                   WHERE Id = @Id
+                ", DbEntityHelper.GetSqlParameters(entity, excludeId: false).ToArray());
+        }
+
+        public Task<long> Add(TData entity)
+        {
+            var entityType = entity.GetType();
+
+            return dbQuery.ExecuteInsertCommandAsync(
+                $@"INSERT INTO [dbo].[{DbEntityHelper.GetDbTableName(entityType)}]
+                (
+                    {DbEntityHelper.GetPropertiesString(entityType)}
+                ) 
+                VALUES
+                (
+                    {DbEntityHelper.GetSqlParametersString(entity)}
+                )", DbEntityHelper.GetSqlParameters(entity).ToArray());
+        }
     }
 }

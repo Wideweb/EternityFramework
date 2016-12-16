@@ -91,5 +91,10 @@ namespace EternityFramework.LinqToSql.SqlQueryBuilder
         {
             state.AddComma();
         }
+
+        public void AddCount(Type tableType)
+        {
+            state.AddCount(tableType);
+        }
     }
 }
